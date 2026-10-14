@@ -10878,22 +10878,17 @@ function initRepMultiFilters() {
     () => { filterRepEscRows(); updateRepEscFooter(); }
   );
 
-  repFilterUI.escStatus = makeRep(
-    "repEscStatusFilter",
-    {
-      placeholder: "كل الحالات",
-      searchPlaceholder: "ابحث عن حالة...",
-      noItemsText: "لا توجد حالات",
-    },
-    () => { filterRepEscRows(); updateRepEscFooter(); }
-  );
-  if (repFilterUI.escStatus) {
-    repFilterUI.escStatus.setOptions([
-      { id: "لم يتم الرد",  label: "لم يتم الرد" },
-      { id: "الرد جزئيًا", label: "الرد جزئيًا" },
-      { id: "تم الرد",     label: "تم الرد" },
-    ]);
-  }
+  const updateEscStatus = () => {
+    const escStatus = document.getElementById("repEscStatusFilter");
+    const detailWrap = document.getElementById("repEscStatusDetailWrap");
+    if (detailWrap) detailWrap.style.display = escStatus?.value === ESC_FILTER_REPLYABLE ? "" : "none";
+    filterRepEscRows();
+    updateRepEscFooter();
+  };
+  document.addEventListener("change", (event) => {
+    if (event.target?.id === "repEscStatusFilter" || event.target?.id === "repEscStatusDetailFilter") updateEscStatus();
+  });
+  updateEscStatus();
 
   repFilterUI.invPayStatus = makeRep(
     "repInvPaymentStatusFilter",
@@ -15609,6 +15604,14 @@ function renderRepEscalations(data) {
 
           const tr = document.createElement("tr");
           tr.setAttribute("data-key", escKey);
+          const reportFilterStatus = isInsuranceEscalation
+            ? insuranceView.status === "غير مسدد"
+              ? ESC_FILTER_UNPAID
+              : ESC_FILTER_REPLIED
+            : status === ESC_STATUS_PENDING
+              ? ESC_FILTER_NOT_REPLIED
+              : ESC_FILTER_REPLIED;
+          tr.setAttribute("data-filter-status", reportFilterStatus);
           // Unpaid SI escalations are counted like regular ones (no data-si-reference)
           tr.innerHTML = isInsuranceEscalation
             ? `
@@ -15747,7 +15750,8 @@ function filterRepEscRows() {
   const query = (document.getElementById("searchRepEsc")?.value || "").toLowerCase().trim();
   // Read multi-selected values; empty array means "show all"
   const descValues = repFilterUI.escDesc ? repFilterUI.escDesc.getSelected() : [];
-  const statusValues = repFilterUI.escStatus ? repFilterUI.escStatus.getSelected() : [];
+  const mainStatus = document.getElementById("repEscStatusFilter")?.value || ESC_FILTER_ALL;
+  const detailStatus = document.getElementById("repEscStatusDetailFilter")?.value || ESC_FILTER_ALL;
   const rows = document.querySelectorAll("#tblRepEsc tbody tr");
   rows.forEach((r) => {
     if (r.querySelector("td[colspan]")) return;
@@ -15760,11 +15764,13 @@ function filterRepEscRows() {
       const descCell = r.children[5]?.textContent.trim() || "";
       if (!descValues.some((v) => descCell.includes(v))) show = false;
     }
-    if (statusValues.length > 0 && show) {
-      const statusCell = r.children[7]?.textContent.trim() || "";
-      // match if any selected status is found in the cell
-      if (!statusValues.some((v) => statusCell === v || statusCell.includes(v)))
-        show = false;
+    if (show) {
+      const status = r.getAttribute("data-filter-status");
+      const statusMatches = mainStatus === ESC_FILTER_ALL ||
+        (mainStatus === ESC_FILTER_NOT_REPLIED && status === ESC_FILTER_NOT_REPLIED) ||
+        (mainStatus === ESC_FILTER_REPLYABLE && status !== ESC_FILTER_NOT_REPLIED &&
+          (detailStatus === ESC_FILTER_ALL || status === detailStatus));
+      if (!statusMatches) show = false;
     }
     r.style.display = show ? "" : "none";
   });

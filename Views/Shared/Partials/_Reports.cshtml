@@ -145,12 +145,20 @@
                                         <option value="">الكل</option>
                                     </select>
                                 </div>
-                                <div class="filter-group">
-                                    <label for="repEscStatusFilter">حالة الرد</label>
-                                    <select id="repEscStatusFilter">
-                                        <option value="لم يتم الرد">لم يتم الرد</option>
-                                        <option value="الرد جزئيًا">الرد جزئيًا</option>
-                                        <option value="تم الرد">تم الرد</option>
+                                <div class="form-group" style="min-width:200px;margin:0">
+                                    <label for="repEscStatusFilter" style="font-size:0.8rem;font-weight:600;display:block;margin-bottom:0.25rem">حالة الرد</label>
+                                    <select class="form-select" id="repEscStatusFilter">
+                                        <option value="all">الكل</option>
+                                        <option value="not-replied">غير قابلة للرد</option>
+                                        <option value="replyable">قابلة للرد</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" id="repEscStatusDetailWrap" style="min-width:200px;margin:0;display:none">
+                                    <label for="repEscStatusDetailFilter" style="font-size:0.8rem;font-weight:600;display:block;margin-bottom:0.25rem">تفصيل حالة قابلة للرد</label>
+                                    <select class="form-select" id="repEscStatusDetailFilter">
+                                        <option value="all">كل الحالات</option>
+                                        <option value="replied">تم الرد</option>
+                                        <option value="unpaid">غير مسدد</option>
                                     </select>
                                 </div>
                             </div>
